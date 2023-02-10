@@ -76,7 +76,7 @@ void loop() {
 
   //Establish a speed limit
   int limit = SPEED_LIMIT - SpeedReduction;
-  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT);
+  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
   debug("LIMIT", limit);
 
   //Map speeds to within speed limit
