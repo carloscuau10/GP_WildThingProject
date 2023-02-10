@@ -74,7 +74,7 @@ void loop() {
   else if(y<512) y = map(y, 0, 512-DEADBAND, 0, 512);
 
   //Establish a speed limit
-  int limit = SPEED_LIMIT;
+  int limit = SPEED_LIMIT - SpeedReduction;
   if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT);
   debug("LIMIT", limit);
 
@@ -105,10 +105,13 @@ void loop() {
   if(DISTANCE_WARNING){
     int inches = pulseIn(ULTRASONIC, HIGH)/144;
     debug("Inches", inches);
+    int SpeedReduction = 0;
     if(inches<WARNING_DISTANCE){
       setPiezo(true);
+      SpeedReduction = (WARNING_DISTANCE-inches)*19
     }else{
       setPiezo(false);
+      SpeedReduction = 0;
     }
   }
 
