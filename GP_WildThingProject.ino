@@ -22,6 +22,7 @@ int RAMPING = 2;
 int WARNING_DISTANCE = 14; // Distance in inches to sound piezo
 int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
+int SpeedReduction;
 
 // Pins
 int JOYSTICK_X = 1;
@@ -105,10 +106,10 @@ void loop() {
   if(DISTANCE_WARNING){
     int inches = pulseIn(ULTRASONIC, HIGH)/144;
     debug("Inches", inches);
-    int SpeedReduction = 0;
+    
     if(inches<WARNING_DISTANCE){
       setPiezo(true);
-      SpeedReduction = (WARNING_DISTANCE-inches)*19
+      SpeedReduction = (WARNING_DISTANCE-inches)*(256/WARNING_DISTANCE)
     }else{
       setPiezo(false);
       SpeedReduction = 0;
