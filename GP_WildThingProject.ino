@@ -1,6 +1,7 @@
 /*
  * GoBabyGo Car Controller
  * Writen by FIRST Team 1939 (The Kuhnigits)
+ * Modified by Alex Patrick and Carlos Gutierrez for the GoBabyGo Program at Mercer University
  */
 
 #include <Servo.h>
@@ -24,14 +25,21 @@ int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
 int SpeedReduction;
 
-// Pins
+// Joystick Pins
 int JOYSTICK_X = 1;
 int JOYSTICK_Y = 2;
+// Motor Pins
 int MOTOR_1    = 10;
 int MOTOR_2    = 9;
-int SERVO      = 5;
+// Servo Steering Pin
+// int SERVO      = 5;
+// Speed Potentiometer Pin
 int SPEED_POT  = 0;
-int ULTRASONIC = 6;
+// Ultrasonic Pins
+// Code began with ULTRASONICFRONTRIGHT, looking to add more sensors
+//int ULTRASONICFRONTLEFT = 5;
+int ULTRASONICFRONTRIGHT = 6;
+// Buzzer Pin
 int PIEZO      = 13;
 
 // Debug Over Serial - Requires a FTDI cable
@@ -51,7 +59,7 @@ void setup() {
   if(SERVO_STEERING) servo.attach(SERVO);
   if(SPEED_POTENTIOMETER) pinMode(SPEED_POT, INPUT);
   if(DISTANCE_WARNING){
-    pinMode(ULTRASONIC, INPUT);
+    pinMode(ULTRASONICFRONTRIGHT, INPUT);
     pinMode(PIEZO, OUTPUT);
   }
   if(DEBUG) Serial.begin(9600);
@@ -104,7 +112,7 @@ void loop() {
 
   //Ultrasonic Code
   if(DISTANCE_WARNING){
-    int inches = pulseIn(ULTRASONIC, HIGH)/144;
+    int inches = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
     debug("Inches", inches);
     
     if(inches<WARNING_DISTANCE){
