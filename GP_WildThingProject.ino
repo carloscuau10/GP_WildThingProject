@@ -32,12 +32,12 @@ int JOYSTICK_Y = 2;
 int MOTOR_1    = 10;
 int MOTOR_2    = 9;
 // Servo Steering Pin
-// int SERVO      = 5;
+int SERVO      = 3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
 int SPEED_POT  = 0;
 // Ultrasonic Pins
 // Code began with ULTRASONICFRONTRIGHT, looking to add more sensors
-//int ULTRASONICFRONTLEFT = 5;
+int ULTRASONICFRONTLEFT = 5;
 int ULTRASONICFRONTRIGHT = 6;
 // Buzzer Pin
 int PIEZO      = 13;
@@ -60,6 +60,7 @@ void setup() {
   if(SPEED_POTENTIOMETER) pinMode(SPEED_POT, INPUT);
   if(DISTANCE_WARNING){
     pinMode(ULTRASONICFRONTRIGHT, INPUT);
+    pinMode(ULTRASONICFRONTLEFT, INPUT);
     pinMode(PIEZO, OUTPUT);
   }
   if(DEBUG) Serial.begin(9600);
@@ -112,13 +113,20 @@ void loop() {
 
   //Ultrasonic Code
   if(DISTANCE_WARNING){
-    int inches = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
-    debug("Inches", inches);
+    int FrontRightinches = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
+    int FrontLeftinches = pulseIn(ULTRASONICFRONTLEFT, HIGH)/144;
+    debug("Inches", FrontRightinches);
+    debug("Inches", FrontLeftinches);
     
-    if(inches<WARNING_DISTANCE){
+    if(FrontRightinches<WARNING_DISTANCE){
       setPiezo(true);
-      SpeedReduction = (WARNING_DISTANCE-inches)*(256/WARNING_DISTANCE)
-    }else{
+      SpeedReduction = (WARNING_DISTANCE-FrontRightinches)*(256/WARNING_DISTANCE);
+    }
+    else if(FrontLeftinches<WARNING_DISTANCE){
+      setPiezo(true);
+      SpeedReduction = (WARNING_DISTANCE-FrontLeftinches)*(256/WARNING_DISTANCE);
+    }
+    else{
       setPiezo(false);
       SpeedReduction = 0;
     }
