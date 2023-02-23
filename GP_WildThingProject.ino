@@ -23,7 +23,7 @@ int RAMPING = 2;
 int WARNING_DISTANCE = 14; // Distance in inches to sound piezo
 int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
-int SpeedReduction;
+int SpeedScalar;
 //This array will help look for the sensor with least distance measured
 int inchesArray[]= {};
 
@@ -91,8 +91,8 @@ void loop() {
   else if(y<512) y = map(y, 0, 512-DEADBAND, 0, 512);
 
   //Establish a speed limit
-  int limit = SPEED_LIMIT - SpeedReduction;
-  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
+  int limit = SPEED_LIMIT * SpeedScalar;
+  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT * SpeedScalar);
   debug("LIMIT", limit);
 
   //Map speeds to within speed limit
@@ -147,11 +147,11 @@ void loop() {
 
     if(inches<WARNING_DISTANCE){
       setPiezo(true);
-      SpeedReduction = (WARNING_DISTANCE-inches)*(256/WARNING_DISTANCE);
+      SpeedScalar = inches/WARNING_DISTANCE;
     }
     else{
       setPiezo(false);
-      SpeedReduction = 0;
+      SpeedScalar = 1;
     }
   }
   delay(20); //Make loop run approximately 50hz
