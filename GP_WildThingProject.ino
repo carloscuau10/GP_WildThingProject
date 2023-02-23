@@ -1,6 +1,6 @@
 /*
- * GoBabyGo Car Controller
- * Writen by FIRST Team 1939 (The Kuhnigits)
+ * GoBabyGo Wild Thing Car Controller
+ * Written by FIRST Team 1939 (The Kuhnigits)
  * Modified by Alex Patrick and Carlos Gutierrez for the GoBabyGo Program at Mercer University
  */
 
@@ -24,21 +24,26 @@ int WARNING_DISTANCE = 14; // Distance in inches to sound piezo
 int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
 int SpeedReduction;
+//This array will help look for the sensor with least distance measured
+int inchesArray[]= {};
 
 // Joystick Pins
 int JOYSTICK_X = 1;
 int JOYSTICK_Y = 2;
 // Motor Pins
-int MOTOR_1    = 10;
-int MOTOR_2    = 9;
+int MOTOR_1    = 12;//Left Motor (Green)
+int MOTOR_2    = 11;//Right Motor (Blue)
 // Servo Steering Pin
 int SERVO      = 3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
 int SPEED_POT  = 0;
-// Ultrasonic Pins
-// Code began with ULTRASONICFRONTRIGHT, looking to add more sensors
+// Ultrasonic Input Pins
+int ultrasonicSensorTotal = 4;//Number of sensors
 int ULTRASONICFRONTLEFT = 5;
 int ULTRASONICFRONTRIGHT = 6;
+int ULTRASONICBACKRIGHT = 9;
+int ULTRASONICBACKLEFT = 10;
+
 // Buzzer Pin
 int PIEZO      = 13;
 
@@ -61,6 +66,8 @@ void setup() {
   if(DISTANCE_WARNING){
     pinMode(ULTRASONICFRONTRIGHT, INPUT);
     pinMode(ULTRASONICFRONTLEFT, INPUT);
+    pinMode(ULTRASONICBACKRIGHT, INPUT);
+    pinMode(ULTRASONICBACKLEFT, INPUT);
     pinMode(PIEZO, OUTPUT);
   }
   if(DEBUG) Serial.begin(9600);
@@ -113,25 +120,40 @@ void loop() {
 
   //Ultrasonic Code
   if(DISTANCE_WARNING){
-    int FrontRightinches = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
-    int FrontLeftinches = pulseIn(ULTRASONICFRONTLEFT, HIGH)/144;
-    debug("Inches", FrontRightinches);
-    debug("Inches", FrontLeftinches);
-    
-    if(FrontRightinches<WARNING_DISTANCE){
-      setPiezo(true);
-      SpeedReduction = (WARNING_DISTANCE-FrontRightinches)*(256/WARNING_DISTANCE);
+    //Looks puts sensor readings into array
+    inchesArray[0] = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
+    inchesArray[1] = pulseIn(ULTRASONICFRONTLEFT, HIGH)/144; 
+    inchesArray[2] = pulseIn(ULTRASONICBACKRIGHT, HIGH)/144;
+    inchesArray[3] = pulseIn(ULTRASONICBACKLEFT, HIGH)/144;
+    //Sort Array
+    for(int x = 0; x < ultrasonicSensorTotal; x++)
+    {
+      for(int x = 0; x < ultrasonicSensorTotal; x++)
+      {
+        int y = x + 1;
+        if(inchesArray[x]>inchesArray[y])
+        {
+          int temp;
+          temp = inchesArray[y];
+          inchesArray[y]=inchesArray[x];
+          inchesArray[x]= temp;
+        }
+      }
     }
-    else if(FrontLeftinches<WARNING_DISTANCE){
+    //Now that array is sorted we can take the smallest distance
+    int inches = inchesArray[0];
+    
+    debug("Inches", inches);
+
+    if(inches<WARNING_DISTANCE){
       setPiezo(true);
-      SpeedReduction = (WARNING_DISTANCE-FrontLeftinches)*(256/WARNING_DISTANCE);
+      SpeedReduction = (WARNING_DISTANCE-inches)*(256/WARNING_DISTANCE);
     }
     else{
       setPiezo(false);
       SpeedReduction = 0;
     }
   }
-
   delay(20); //Make loop run approximately 50hz
 }
 
