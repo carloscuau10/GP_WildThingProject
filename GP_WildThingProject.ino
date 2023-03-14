@@ -20,19 +20,19 @@ boolean INVERT_2 = false;
 int SPEED_LIMIT = 256; // Between 0-512
 int DEADBAND = 150;
 int RAMPING = 2;
-int WARNING_DISTANCE = 14; // Distance in inches to sound piezo
+int WARNING_DISTANCE = 20; // Distance in inches to begin slowing down
 int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
-int SpeedScalar;
+int SpeedReduction;
 //This array will help look for the sensor with least distance measured
 int inchesArray[]= {};
 
 // Joystick Pins
-int JOYSTICK_X = 1;
-int JOYSTICK_Y = 2;
+int JOYSTICK_X = 1;//Blue
+int JOYSTICK_Y = 2;//Green
 // Motor Pins
-int MOTOR_1    = 12;//Left Motor (Green)
-int MOTOR_2    = 11;//Right Motor (Blue)
+int MOTOR_1    = 12;//Left Motor (Yellow)
+int MOTOR_2    = 11;//Right Motor (Brown)
 // Servo Steering Pin
 int SERVO      = 3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
@@ -77,8 +77,8 @@ void loop() {
   //Read from the joystick
   int x = analogRead(JOYSTICK_X);
   int y = analogRead(JOYSTICK_Y);
-  debug("Raw X", x);
-  debug("Raw Y", y);
+  //debug("Raw X", x);
+  //debug("Raw Y", y);
 
   //Zero values within deadband
   if(abs(512-x)<DEADBAND) x = 512;
@@ -91,15 +91,15 @@ void loop() {
   else if(y<512) y = map(y, 0, 512-DEADBAND, 0, 512);
 
   //Establish a speed limit
-  int limit = SPEED_LIMIT * SpeedScalar;
-  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT * SpeedScalar);
+  int limit = SPEED_LIMIT - SpeedReduction;
+  if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
   debug("LIMIT", limit);
 
   //Map speeds to within speed limit
   x = map(x, 0, 1023, 512-limit, 512+limit);
   y = map(y, 0, 1023, 512-limit, 512+limit);
-  debug("X", x);
-  debug("Y", y);
+  //debug("X", x);
+  //debug("Y", y);
   
   if(TWO_MOTORS){
     int moveValue = 0;
@@ -145,13 +145,27 @@ void loop() {
     
     debug("Inches", inches);
 
-    if(inches<WARNING_DISTANCE){
+    //This section of the code slows the vehicle based on the inches reading
+
+    if(inches<WARNING_DISTANCE && inches >=(int((double)WARNING_DISTANCE)/1.5)){
       setPiezo(true);
-      SpeedScalar = inches/WARNING_DISTANCE;
+      SpeedReduction = int((double)SPEED_LIMIT/2.5);
+    }
+    else if(inches<(int((double)WARNING_DISTANCE)/1.5) && inches >=(int((double)WARNING_DISTANCE)/2.0)){
+      setPiezo(true);
+      SpeedReduction = int((double)SPEED_LIMIT/2.25);
+    }
+    else if(inches<(int((double)WARNING_DISTANCE)/2.0) && inches >=(int((double)WARNING_DISTANCE)/2.5)){
+      setPiezo(true);
+      SpeedReduction = int((double)SPEED_LIMIT/1.75);
+    }
+    else if(inches<(int((double)WARNING_DISTANCE)/2.5)){
+      setPiezo(true);
+      SpeedReduction = int((double)SPEED_LIMIT/1.25);
     }
     else{
       setPiezo(false);
-      SpeedScalar = 1;
+      SpeedReduction = 0;
     }
   }
   delay(20); //Make loop run approximately 50hz
