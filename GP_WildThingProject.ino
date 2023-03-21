@@ -24,8 +24,7 @@ int WARNING_DISTANCE = 20; // Distance in inches to begin slowing down
 int REVERSE_PULSE    = 1000; // Talon SR is 1000
 int FORWARD_PULSE    = 2000; // Talon SR is 2000
 int SpeedReduction;
-//This array will help look for the sensor with least distance measured
-int inchesArray[]= {};
+
 
 // Joystick Pins
 int JOYSTICK_X = 1;//Blue
@@ -43,6 +42,9 @@ int ULTRASONICFRONTLEFT = 5;
 int ULTRASONICFRONTRIGHT = 6;
 int ULTRASONICBACKRIGHT = 9;
 int ULTRASONICBACKLEFT = 10;
+
+//This array will help look for the sensor with least distance measured
+int inchesArray[4]={};//set bounds to number of sensors!
 
 // Buzzer Pin
 int PIEZO      = 13;
@@ -93,13 +95,13 @@ void loop() {
   //Establish a speed limit
   int limit = SPEED_LIMIT - SpeedReduction;
   if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
-  debug("LIMIT", limit);
+  //debug("LIMIT", limit);//displays speed on Serial Monitor
 
   //Map speeds to within speed limit
-  x = map(x, 0, 1023, 512-limit, 512+limit);
-  y = map(y, 0, 1023, 512-limit, 512+limit);
-  //debug("X", x);
-  //debug("Y", y);
+  x = map(x, 0, 1023, 512-limit, 512+limit);//x defaults to 512, increases going forward, and decreases going reverse
+  y = map(y, 0, 1023, 512-limit, 512+limit);//y defaults to 512, increases going left, decreases going right
+  debug("X", x);//Displays X on Serial Monitor
+  debug("Y", y);//Displays Y on Serial Monitor
   
   if(TWO_MOTORS){
     int moveValue = 0;
@@ -120,30 +122,33 @@ void loop() {
 
   //Ultrasonic Code
   if(DISTANCE_WARNING){
-    //Looks puts sensor readings into array
-    inchesArray[0] = pulseIn(ULTRASONICFRONTRIGHT, HIGH)/144;
-    inchesArray[1] = pulseIn(ULTRASONICFRONTLEFT, HIGH)/144; 
-    inchesArray[2] = pulseIn(ULTRASONICBACKRIGHT, HIGH)/144;
-    inchesArray[3] = pulseIn(ULTRASONICBACKLEFT, HIGH)/144;
+    //Puts sensor readings into array based on the joystick values
+    inchesArray[0] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
+    debug("FR inches",inchesArray[0]);//displays FR inches on SM
+    inchesArray[1] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
+    debug("FL inches",inchesArray[1]);//displays FL inches on SM
+    inchesArray[2] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
+    debug("BR inches",inchesArray[2]);//displays BR inches on SM
+    inchesArray[3] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
+    debug("BL inches",inchesArray[3]);//displays BL inches on SM
     //Sort Array
-    for(int x = 0; x < ultrasonicSensorTotal; x++)
+    for(int i = 0; i < ultrasonicSensorTotal-1; i++)
     {
-      for(int x = 0; x < ultrasonicSensorTotal; x++)
+      for(int j = 0; j < ultrasonicSensorTotal-1; j++)
       {
-        int y = x + 1;
-        if(inchesArray[x]>inchesArray[y])
+        int y = j + 1;
+        if(inchesArray[j]>inchesArray[y])
         {
-          int temp;
-          temp = inchesArray[y];
-          inchesArray[y]=inchesArray[x];
-          inchesArray[x]= temp;
+          int temp = inchesArray[y];
+          inchesArray[y]=inchesArray[j];
+          inchesArray[j]=temp;
         }
       }
     }
     //Now that array is sorted we can take the smallest distance
     int inches = inchesArray[0];
     
-    debug("Inches", inches);
+    debug("Min inches", inches);//displays min distance on Serial Monitor
 
     //This section of the code slows the vehicle based on the inches reading
 
