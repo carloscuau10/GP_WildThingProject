@@ -123,6 +123,26 @@ void loop() {
   //Ultrasonic Code
   if(DISTANCE_WARNING){
     //Puts sensor readings into array based on the joystick values
+    if (x > 512)//Forward Mode: Turns on front sensors
+    {
+      inchesArray[0] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
+      debug("FR inches",inchesArray[0]);//displays FR inches on SM
+      inchesArray[1] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
+      debug("FL inches",inchesArray[1]);//displays FL inches on SM
+      inchesArray[2] = WARNING_DISTANCE * 2;//BR is OFF 
+      inchesArray[3] = WARNING_DISTANCE * 2;//BL is OFF
+    }
+    else if (x < 512)//Reverse Mode: Turns on back sensors
+    {
+      inchesArray[0] = WARNING_DISTANCE * 2;//FR is OFF
+      inchesArray[1] = WARNING_DISTANCE * 2;//FL is OFF
+      inchesArray[2] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
+      debug("BR inches",inchesArray[2]);//displays BR inches on SM
+      inchesArray[3] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
+      debug("BL inches",inchesArray[3]);//displays BL inches on SM
+    }
+    //If joystick is not being used, all sensors will be turned on
+    else{
     inchesArray[0] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
     debug("FR inches",inchesArray[0]);//displays FR inches on SM
     inchesArray[1] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
@@ -131,6 +151,7 @@ void loop() {
     debug("BR inches",inchesArray[2]);//displays BR inches on SM
     inchesArray[3] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
     debug("BL inches",inchesArray[3]);//displays BL inches on SM
+    }
     //Sort Array
     for(int i = 0; i < ultrasonicSensorTotal-1; i++)
     {
