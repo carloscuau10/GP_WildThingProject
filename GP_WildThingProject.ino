@@ -37,14 +37,16 @@ int SERVO      = 3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
 int SPEED_POT  = 0;
 // Ultrasonic Input Pins
-int ultrasonicSensorTotal = 4;//Number of sensors
-int ULTRASONICFRONTLEFT = 5;
-int ULTRASONICFRONTRIGHT = 6;
-int ULTRASONICBACKRIGHT = 9;
-int ULTRASONICBACKLEFT = 10;
+int ultrasonicSensorTotal = 6;//Number of sensors
+int ULTRASONICFRONT = 8;
+int ULTRASONICFRONTLEFT = 9;
+int ULTRASONICFRONTRIGHT = 10;
+int ULTRASONICBACK = 7;
+int ULTRASONICBACKRIGHT = 5;
+int ULTRASONICBACKLEFT = 6;
 
 //This array will help look for the sensor with least distance measured
-int inchesArray[4]={};//set bounds to number of sensors!
+int inchesArray[6]={};//set bounds to number of sensors!
 
 // Buzzer Pin
 int PIEZO      = 13;
@@ -66,8 +68,10 @@ void setup() {
   if(SERVO_STEERING) servo.attach(SERVO);
   if(SPEED_POTENTIOMETER) pinMode(SPEED_POT, INPUT);
   if(DISTANCE_WARNING){
+    pinMode(ULTRASONICFRONT, INPUT);
     pinMode(ULTRASONICFRONTRIGHT, INPUT);
     pinMode(ULTRASONICFRONTLEFT, INPUT);
+    pinMode(ULTRASONICBACK, INPUT);
     pinMode(ULTRASONICBACKRIGHT, INPUT);
     pinMode(ULTRASONICBACKLEFT, INPUT);
     pinMode(PIEZO, OUTPUT);
@@ -125,32 +129,42 @@ void loop() {
     //Puts sensor readings into array based on the joystick values
     if (x > 512)//Forward Mode: Turns on front sensors
     {
-      inchesArray[0] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
-      debug("FR inches",inchesArray[0]);//displays FR inches on SM
-      inchesArray[1] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
-      debug("FL inches",inchesArray[1]);//displays FL inches on SM
-      inchesArray[2] = WARNING_DISTANCE * 2;//BR is OFF 
-      inchesArray[3] = WARNING_DISTANCE * 2;//BL is OFF
+      inchesArray[0] = int(pulseIn(ULTRASONICFRONT, HIGH))/144; 
+      debug("FRONT inches",inchesArray[0]);//displays FL inches on SM
+      inchesArray[1] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
+      debug("FR inches",inchesArray[1]);//displays FR inches on SM
+      inchesArray[2] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
+      debug("FL inches",inchesArray[2]);//displays FL inches on SM
+      inchesArray[3] = WARNING_DISTANCE * 2;//B is OFF
+      inchesArray[4] = WARNING_DISTANCE * 2;//BR is OFF
+      inchesArray[5] = WARNING_DISTANCE * 2;//BL is OFF
     }
     else if (x < 512)//Reverse Mode: Turns on back sensors
     {
-      inchesArray[0] = WARNING_DISTANCE * 2;//FR is OFF
-      inchesArray[1] = WARNING_DISTANCE * 2;//FL is OFF
-      inchesArray[2] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
-      debug("BR inches",inchesArray[2]);//displays BR inches on SM
-      inchesArray[3] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
-      debug("BL inches",inchesArray[3]);//displays BL inches on SM
+      inchesArray[0] = WARNING_DISTANCE * 2;//F is OFF
+      inchesArray[1] = WARNING_DISTANCE * 2;//FR is OFF
+      inchesArray[2] = WARNING_DISTANCE * 2;//FL is OFF
+      inchesArray[3] = int(pulseIn(ULTRASONICBACK, HIGH))/144;
+      debug("BACK inches",inchesArray[3]);//displays B inches on SM
+      inchesArray[4] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
+      debug("BR inches",inchesArray[4]);//displays BR inches on SM
+      inchesArray[5] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
+      debug("BL inches",inchesArray[5]);//displays BL inches on SM
     }
     //If joystick is not being used, all sensors will be turned on
     else{
-    inchesArray[0] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
-    debug("FR inches",inchesArray[0]);//displays FR inches on SM
-    inchesArray[1] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
-    debug("FL inches",inchesArray[1]);//displays FL inches on SM
-    inchesArray[2] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
-    debug("BR inches",inchesArray[2]);//displays BR inches on SM
-    inchesArray[3] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
-    debug("BL inches",inchesArray[3]);//displays BL inches on SM
+    inchesArray[0] = int(pulseIn(ULTRASONICFRONT, HIGH))/144;
+    debug("FRONT inches",inchesArray[0]);//displays F inches on SM
+    inchesArray[1] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
+    debug("FR inches",inchesArray[1]);//displays FR inches on SM
+    inchesArray[2] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
+    debug("FL inches",inchesArray[2]);//displays FL inches on SM
+    inchesArray[3] = int(pulseIn(ULTRASONICBACK, HIGH))/144;
+    debug("BACK inches",inchesArray[3]);//displays B inches on SM
+    inchesArray[4] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
+    debug("BR inches",inchesArray[4]);//displays BR inches on SM
+    inchesArray[5] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
+    debug("BL inches",inchesArray[5]);//displays BL inches on SM
     }
     //Sort Array
     for(int i = 0; i < ultrasonicSensorTotal-1; i++)
