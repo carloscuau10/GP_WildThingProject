@@ -27,15 +27,21 @@ int SpeedReduction;
 
 
 // Joystick Pins
-int JOYSTICK_X = 1;//Blue
-int JOYSTICK_Y = 2;//Green
+const int JOYSTICK_X = A1;//Blue
+const int JOYSTICK_Y = A2;//Green
+// RF Controller Pins
+int KILLSWITCH = 4; // A Button- Stops Motors from running
+int SENSORSWITCH = 3; // B Button- Turns ultrasonic sensors off
+int LIGHTSWITCH = 2; // C Button- Turns lights on and off
+int PIEZOSWITCH = 1; // D Button- Turns piezo buzzer on and off
+
 // Motor Pins
 int MOTOR_1    = 12;//Left Motor (Yellow)
 int MOTOR_2    = 11;//Right Motor (Brown)
 // Servo Steering Pin
-int SERVO      = 3;// Make sure this pin is not being used
+const int SERVO = A3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
-int SPEED_POT  = 0;
+const int SPEED_POT  = A0;
 // Ultrasonic Input Pins
 int ultrasonicSensorTotal = 6;//Number of sensors
 int ULTRASONICFRONT = 8;
@@ -49,7 +55,7 @@ int ULTRASONICBACKLEFT = 6;
 int inchesArray[6]={};//set bounds to number of sensors!
 
 // Buzzer Pin
-int PIEZO      = 13;
+int PIEZO= 13;
 
 // Debug Over Serial - Requires a FTDI cable
 boolean DEBUG = true;
@@ -63,6 +69,8 @@ Servo servo;
 void setup() {
   pinMode(JOYSTICK_X, INPUT);
   pinMode(JOYSTICK_Y, INPUT);
+  pinMode(KILLSWITCH, INPUT);
+  pinMode(LIGHTSWITCH, INPUT);
   motor1.attach(MOTOR_1);
   if(TWO_MOTORS) motor2.attach(MOTOR_2);
   if(SERVO_STEERING) servo.attach(SERVO);
@@ -75,6 +83,8 @@ void setup() {
     pinMode(ULTRASONICBACKRIGHT, INPUT);
     pinMode(ULTRASONICBACKLEFT, INPUT);
     pinMode(PIEZO, OUTPUT);
+    pinMode(SENSORSWITCH, INPUT);
+    pinMode(PIEZOSWITCH, INPUT);
   }
   if(DEBUG) Serial.begin(9600);
 }
@@ -150,6 +160,17 @@ void loop() {
       debug("BR inches",inchesArray[4]);//displays BR inches on SM
       inchesArray[5] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
       debug("BL inches",inchesArray[5]);//displays BL inches on SM
+    }
+    //If the button B is pressed, all sensors will be turned off
+    else if(pulseIn(SENSORSWITCH, HIGH)){
+      setPiezo(true);
+      /*inchesArray[0] = WARNING_DISTANCE * 2;//F is OFF
+      inchesArray[1] = WARNING_DISTANCE * 2;//FR is OFF
+      inchesArray[2] = WARNING_DISTANCE * 2;//FL is OFF
+      inchesArray[3] = WARNING_DISTANCE * 2;//B is OFF
+      inchesArray[4] = WARNING_DISTANCE * 2;//BR is OFF
+      inchesArray[5] = WARNING_DISTANCE * 2;//BL is OFF
+      */
     }
     //If joystick is not being used, all sensors will be turned on
     else{
