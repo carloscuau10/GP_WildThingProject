@@ -117,7 +117,21 @@ void loop() {
   else if(y<512) y = map(y, 0, 512-DEADBAND, 0, 512);
 
   //Establish a speed limit
-  int limit = SPEED_LIMIT - SpeedReduction;
+  int limit;
+  int decay;
+  if (killSwitchState == LOW)
+    limit = SPEED_LIMIT - SpeedReduction;
+  else
+  {
+    //decay = limit/20;
+    //for (int i = 0; i<20; i++)
+    //{
+      limit = limit/5;
+      //x = map(x, 0, 1023, 512-limit, 512+limit);
+      debug("LIMIT: ", limit);
+      delay(400);
+    //}
+  }
   if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
   /*if(killSwitchState == HIGH){
     debug("A BUTTON PRESSED: KILLSWITCH ON",killSwitchState);
