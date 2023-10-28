@@ -9,7 +9,7 @@
 // Mechanical Setup - Either TWO_MOTORS or SERVO_STEERING should be true, not both!
 boolean TWO_MOTORS          = true;
 boolean SERVO_STEERING      = false;
-boolean SPEED_POTENTIOMETER = false;
+boolean SPEED_POTENTIOMETER = true;
 boolean DISTANCE_WARNING    = true;
 
 // Invert one or two of the motors
@@ -27,8 +27,8 @@ int SpeedReduction;
 
 
 // Joystick Pins
-int JOYSTICK_X = 15;//Blue (A1 Pin)
-int JOYSTICK_Y = 16;//Green (A2 Pin)
+const int JOYSTICK_X = A1;//Blue
+const int JOYSTICK_Y = A2;//Green
 // RF Controller Pins
 int KILLSWITCH = 4; // A Button- Stops Motors from running
 int SENSORSWITCH = 3; // B Button- Turns ultrasonic sensors off
@@ -39,9 +39,9 @@ int PIEZOSWITCH = 1; // D Button- Turns piezo buzzer on and off
 int MOTOR_1    = 12;//Left Motor (Yellow)
 int MOTOR_2    = 11;//Right Motor (Brown)
 // Servo Steering Pin
-int SERVO = 17;// (A3 Pin) Make sure this pin is not being used
+const int SERVO = A3;// Make sure this pin is not being used
 // Speed Potentiometer Pin
-int SPEED_POT  = 14;//(A0 Pin)
+const int SPEED_POT  = A0;
 // Ultrasonic Input Pins
 int ultrasonicSensorTotal = 6;//Number of sensors
 int ULTRASONICFRONT = 8;
@@ -50,6 +50,9 @@ int ULTRASONICFRONTRIGHT = 10;
 int ULTRASONICBACK = 7;
 int ULTRASONICBACKRIGHT = 5;
 int ULTRASONICBACKLEFT = 6;
+
+//This array will help look for the sensor with least distance measured
+int inchesArray[6]={};//set bounds to number of sensors!
 
 // Buzzer Pin
 int PIEZO= 13;
@@ -62,21 +65,12 @@ boolean DEBUG = true;
 Servo motor1;
 Servo motor2;
 Servo servo;
-//This array will help look for the sensor with least distance measured
-int inchesArray[6]={};//set bounds to number of sensors!
-
-int killSwitchState = 0;// 0: LOW- Car operates motors // 1: HIGH- Car motors are turned off
-int sensorSwitchState = 0;// 0: LOW- Car operates sensors // 1: HIGH- Car sensors are turned off
-int lightSwitchState = 0;// 0: LOW- Car operates lights // 1: HIGH- Car lights are turned off
-int piezoSwitchState = 0;// 0: LOW- Car operates piezo buzzer // 1: HIGH- Car buzzer is turned off
 
 void setup() {
   pinMode(JOYSTICK_X, INPUT);
   pinMode(JOYSTICK_Y, INPUT);
   pinMode(KILLSWITCH, INPUT);
   pinMode(LIGHTSWITCH, INPUT);
-  pinMode(SENSORSWITCH, INPUT);
-  pinMode(PIEZOSWITCH, INPUT);
   motor1.attach(MOTOR_1);
   if(TWO_MOTORS) motor2.attach(MOTOR_2);
   if(SERVO_STEERING) servo.attach(SERVO);
@@ -89,17 +83,13 @@ void setup() {
     pinMode(ULTRASONICBACKRIGHT, INPUT);
     pinMode(ULTRASONICBACKLEFT, INPUT);
     pinMode(PIEZO, OUTPUT);
+    pinMode(SENSORSWITCH, INPUT);
+    pinMode(PIEZOSWITCH, INPUT);
   }
   if(DEBUG) Serial.begin(9600);
 }
 
 void loop() {
-  //Read from the RF Reciever
-  killSwitchState = digitalRead(KILLSWITCH);
-  sensorSwitchState = digitalRead(SENSORSWITCH);
-  lightSwitchState = digitalRead(LIGHTSWITCH);
-  piezoSwitchState = digitalRead(PIEZOSWITCH);
-
   //Read from the joystick
   int x = analogRead(JOYSTICK_X);
   int y = analogRead(JOYSTICK_Y);
@@ -133,19 +123,13 @@ void loop() {
     //}
   }
   if(SPEED_POTENTIOMETER) limit = map(analogRead(SPEED_POT), 0, 1023, 0, SPEED_LIMIT - SpeedReduction);
-  /*if(killSwitchState == HIGH){
-    debug("A BUTTON PRESSED: KILLSWITCH ON",killSwitchState);
-    SpeedReduction = int((double)SPEED_LIMIT/2.5);
-    DISTANCE_WARNING = false;
-  }
-  */
   //debug("LIMIT", limit);//displays speed on Serial Monitor
 
   //Map speeds to within speed limit
   x = map(x, 0, 1023, 512-limit, 512+limit);//x defaults to 512, increases going forward, and decreases going reverse
   y = map(y, 0, 1023, 512-limit, 512+limit);//y defaults to 512, increases going left, decreases going right
-  //debug("X", x);//Displays X on Serial Monitor
-  //debug("Y", y);//Displays Y on Serial Monitor
+  debug("X", x);//Displays X on Serial Monitor
+  debug("Y", y);//Displays Y on Serial Monitor
   
   if(TWO_MOTORS){
     int moveValue = 0;
@@ -165,25 +149,16 @@ void loop() {
   }
 
   //Ultrasonic Code
-  if(sensorSwitchState==HIGH){
-    DISTANCE_WARNING = false;
-    debug("B Button Pressed: SENSORS OFF", sensorSwitchState);
-    setPiezo(true);
-  }
-  else if(sensorSwitchState==LOW){
-    DISTANCE_WARNING = true;
-    debug("SENSORS ON", sensorSwitchState);
-  }
   if(DISTANCE_WARNING){
     //Puts sensor readings into array based on the joystick values
     if (x > 512)//Forward Mode: Turns on front sensors
     {
       inchesArray[0] = int(pulseIn(ULTRASONICFRONT, HIGH))/144; 
-      //debug("FRONT inches",inchesArray[0]);//displays FL inches on SM
+      debug("FRONT inches",inchesArray[0]);//displays FL inches on SM
       inchesArray[1] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
-      //debug("FR inches",inchesArray[1]);//displays FR inches on SM
+      debug("FR inches",inchesArray[1]);//displays FR inches on SM
       inchesArray[2] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
-      //debug("FL inches",inchesArray[2]);//displays FL inches on SM
+      debug("FL inches",inchesArray[2]);//displays FL inches on SM
       inchesArray[3] = WARNING_DISTANCE * 2;//B is OFF
       inchesArray[4] = WARNING_DISTANCE * 2;//BR is OFF
       inchesArray[5] = WARNING_DISTANCE * 2;//BL is OFF
@@ -194,26 +169,37 @@ void loop() {
       inchesArray[1] = WARNING_DISTANCE * 2;//FR is OFF
       inchesArray[2] = WARNING_DISTANCE * 2;//FL is OFF
       inchesArray[3] = int(pulseIn(ULTRASONICBACK, HIGH))/144;
-      //debug("BACK inches",inchesArray[3]);//displays B inches on SM
+      debug("BACK inches",inchesArray[3]);//displays B inches on SM
       inchesArray[4] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
-      //debug("BR inches",inchesArray[4]);//displays BR inches on SM
+      debug("BR inches",inchesArray[4]);//displays BR inches on SM
       inchesArray[5] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
-      //debug("BL inches",inchesArray[5]);//displays BL inches on SM
+      debug("BL inches",inchesArray[5]);//displays BL inches on SM
+    }
+    //If the button B is pressed, all sensors will be turned off
+    else if(pulseIn(SENSORSWITCH, HIGH)){
+      setPiezo(true);
+      /*inchesArray[0] = WARNING_DISTANCE * 2;//F is OFF
+      inchesArray[1] = WARNING_DISTANCE * 2;//FR is OFF
+      inchesArray[2] = WARNING_DISTANCE * 2;//FL is OFF
+      inchesArray[3] = WARNING_DISTANCE * 2;//B is OFF
+      inchesArray[4] = WARNING_DISTANCE * 2;//BR is OFF
+      inchesArray[5] = WARNING_DISTANCE * 2;//BL is OFF
+      */
     }
     //If joystick is not being used, all sensors will be turned on
     else{
     inchesArray[0] = int(pulseIn(ULTRASONICFRONT, HIGH))/144;
-    //debug("FRONT inches",inchesArray[0]);//displays F inches on SM
+    debug("FRONT inches",inchesArray[0]);//displays F inches on SM
     inchesArray[1] = int(pulseIn(ULTRASONICFRONTRIGHT, HIGH))/144;
-    //debug("FR inches",inchesArray[1]);//displays FR inches on SM
+    debug("FR inches",inchesArray[1]);//displays FR inches on SM
     inchesArray[2] = int(pulseIn(ULTRASONICFRONTLEFT, HIGH))/144; 
-    //debug("FL inches",inchesArray[2]);//displays FL inches on SM
+    debug("FL inches",inchesArray[2]);//displays FL inches on SM
     inchesArray[3] = int(pulseIn(ULTRASONICBACK, HIGH))/144;
-    //debug("BACK inches",inchesArray[3]);//displays B inches on SM
+    debug("BACK inches",inchesArray[3]);//displays B inches on SM
     inchesArray[4] = int(pulseIn(ULTRASONICBACKRIGHT, HIGH))/144;
-    //debug("BR inches",inchesArray[4]);//displays BR inches on SM
+    debug("BR inches",inchesArray[4]);//displays BR inches on SM
     inchesArray[5] = int(pulseIn(ULTRASONICBACKLEFT, HIGH))/144;
-    //debug("BL inches",inchesArray[5]);//displays BL inches on SM
+    debug("BL inches",inchesArray[5]);//displays BL inches on SM
     }
     //Sort Array
     for(int i = 0; i < ultrasonicSensorTotal-1; i++)
@@ -232,7 +218,7 @@ void loop() {
     //Now that array is sorted we can take the smallest distance
     int inches = inchesArray[0];
     
-    //debug("Min inches", inches);//displays min distance on Serial Monitor
+    debug("Min inches", inches);//displays min distance on Serial Monitor
 
     //This section of the code slows the vehicle based on the inches reading
 
@@ -308,7 +294,6 @@ boolean trigger = true;
 int count = 0;
 
 void setPiezo(boolean state){
-  //if((state)&&(piezoSwitchState == LOW))
   if(state){
     if(count>=4){
       trigger = !trigger;
