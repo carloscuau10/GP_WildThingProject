@@ -17,10 +17,10 @@ boolean INVERT_1 = true;
 boolean INVERT_2 = false;
 
 // Constants
-int SPEED_LIMIT = 128;  // Between 0-512
+int SPEED_LIMIT = 512;  // Between 0-512
 int DEADBAND = 150;
 int RAMPING = 2;
-int WARNING_DISTANCE = int(SPEED_LIMIT / 15);  // Distance in inches to begin slowing down
+int WARNING_DISTANCE = int(SPEED_LIMIT / 10) + 6;  // Distance in inches to begin slowing down
 int REVERSE_PULSE = 1000;                      // Talon SR is 1000
 int FORWARD_PULSE = 2000;                      // Talon SR is 2000
 
@@ -90,7 +90,7 @@ unsigned long sensorTimeSet = millis();         //Time set for reading ultrasoni
 
 // Time intervals for timed tasks
 long eBrakeInterval = 100;      //Slow vehicle every 100 ms during kill switch activation
-long sensorInterval = 500;      //Read sensors every 500 milliseconds
+long sensorInterval = 100;      //Read sensors every 100 milliseconds
 long buttonInterval = 2000;     // Interval used to check status of buttons every 2s
 long killSwitchInterval = 500;  // Check killswitch status every 500 milliseconds
 
@@ -276,6 +276,7 @@ void loop()
 
     if (sensorSwitchState == HIGH) {
       debug("B Button Pressed: SENSORS DEACTIVATED", int(sensorSwitchState));
+      SPEED_LIMIT = 256; //set speed to half
       //De-activate sensor readings by setting distance warning mode to false
       DISTANCE_WARNING = false;
     } 
@@ -356,21 +357,29 @@ void loop()
     //debug("Min inches", inches);//displays min distance on Serial Monitor
 
     //Vehicle slowed down based on the smallest inches reading
-    if (inches < WARNING_DISTANCE && inches >= (int((double)WARNING_DISTANCE) / 1.5)) {
+    if (inches < WARNING_DISTANCE && inches >= (int((double)WARNING_DISTANCE) / 1.25)) {
       setPiezo(true);
       SpeedReduction = int((double)SPEED_LIMIT / 2.5);
     } 
-    else if (inches < (int((double)WARNING_DISTANCE) / 1.5) && inches >= (int((double)WARNING_DISTANCE) / 2.0)) {
+    else if (inches < (int((double)WARNING_DISTANCE) / 1.25) && inches >= (int((double)WARNING_DISTANCE) / 1.5)) {
       setPiezo(true);
       SpeedReduction = int((double)SPEED_LIMIT / 2.25);
     } 
-    else if (inches < (int((double)WARNING_DISTANCE) / 2.0) && inches >= (int((double)WARNING_DISTANCE) / 2.5)) {
+    else if (inches < (int((double)WARNING_DISTANCE) / 1.5) && inches >= (int((double)WARNING_DISTANCE) / 2.0)) {
       setPiezo(true);
       SpeedReduction = int((double)SPEED_LIMIT / 1.75);
     } 
-    else if (inches < (int((double)WARNING_DISTANCE) / 2.5)) {
+    else if (inches < (int((double)WARNING_DISTANCE) / 2.0) && inches >= (int((double)WARNING_DISTANCE) / 2.5)) {
+      setPiezo(true);
+      SpeedReduction = int((double)SPEED_LIMIT / 1.5);
+    } 
+    else if (inches < (int((double)WARNING_DISTANCE) / 2.5) && inches >= (int((double)WARNING_DISTANCE) / 2.75)) {
       setPiezo(true);
       SpeedReduction = int((double)SPEED_LIMIT / 1.25);
+    } 
+    else if (inches < (int((double)WARNING_DISTANCE) / 2.75)) {
+      setPiezo(true);
+      SpeedReduction = int((double)SPEED_LIMIT / 1);
     } 
     else {
       setPiezo(false);
